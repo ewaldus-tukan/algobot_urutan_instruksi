@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoBot: Petualangan Urutan Instruksi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            user-select: none;
+        }
+        .font-code {
+            font-family: 'Space Grotesk', monospace;
+        }
+        .glow-cyan {
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
+        }
+        .glow-purple {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
+        }
+        .glow-green {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.35);
+        }
+        .grid-cell {
+            transition: all 0.2s ease;
+        }
+        .robot-head {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .animate-pulse-ring {
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Top Header -->
+    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="goToLevelSelect()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center text-white text-xl shadow-lg glow-cyan">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-none tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-300">AlgoBot</h1>
+                    <p class="text-xs text-slate-400 font-code">KKA Kelas 7 SMP</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center space-x-4 bg-slate-800/80 px-4 py-1.5 rounded-full border border-slate-700/60">
+                <div class="flex items-center space-x-1.5">
+                    <i class="fa-solid fa-star text-amber-400 text-sm"></i>
+                    <span id="starCount" class="font-bold text-amber-300 text-sm">0</span>
+                </div>
+                <div class="h-4 w-px bg-slate-700"></div>
+                <div class="flex items-center space-x-1.5">
+                    <i class="fa-solid fa-trophy text-cyan-400 text-sm"></i>
+                    <span id="scoreCount" class="font-bold text-cyan-300 text-sm">0</span>
+                </div>
+                <div class="h-4 w-px bg-slate-700"></div>
+                <button id="soundToggle" onclick="toggleAudio()" class="text-slate-400 hover:text-slate-100 text-sm transition">
+                    <i class="fa-solid fa-volume-high" id="soundIcon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-5xl mx-auto px-4 py-6 flex-1 w-full flex flex-col justify-center">
+
+        <!-- SCREEN 0: WELCOME & LEVEL SELECT -->
+        <section id="screenMenu" class="space-y-8 animate-fade-in">
+            <div class="text-center space-y-3 max-w-2xl mx-auto">
+                <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-full text-xs font-semibold uppercase tracking-wider">Modul Algoritma & Pemrograman</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold text-slate-100">Petualangan Urutan Instruksi</h2>
+                <p class="text-slate-400 text-sm md:text-base leading-relaxed">
+                    Komputer itu pintar, tapi sangat jujur! Ia hanya melakukan hal sesuai <span class="text-cyan-400 font-semibold">urutan instruksi</span> yang kamu berikan. Yuk, latih logikamu membantu AlgoBot menyelesaikan misi!
+                </p>
+            </div>
+
+            <!-- Level Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Level 1 Card -->
+                <div onclick="startLevel(1)" class="group bg-slate-900 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition text-cyan-400 text-8xl">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div class="text-xs text-cyan-400 font-bold uppercase tracking-wider mb-1">Level 1</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Algoritma Sehari-hari</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed mb-4">Susun urutan langkah nyata seperti membuat teh instan atau bersiap ke sekolah dengan benar.</p>
+                    <div class="flex justify-between items-center">
+                        <span id="lvl1Badge" class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-400">Belum Selesai</span>
+                        <i class="fa-solid fa-arrow-right text-cyan-400 group-hover:translate-x-1 transition"></i>
+                    </div>
+                </div>
+
+                <!-- Level 2 Card -->
+                <div onclick="startLevel(2)" class="group bg-slate-900 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition text-indigo-400 text-8xl">
+                        <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-1">Level 2</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Misi Pemrograman Robot</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed mb-4">Rangkai blok perintah (Maju, Belok, Ambil) untuk mengarahkan AlgoBot di peta grid 4x4.</p>
+                    <div class="flex justify-between items-center">
+                        <span id="lvl2Badge" class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-400">Belum Selesai</span>
+                        <i class="fa-solid fa-arrow-right text-indigo-400 group-hover:translate-x-1 transition"></i>
+                    </div>
+                </div>
+
+                <!-- Level 3 Card -->
+                <div onclick="startLevel(3)" class="group bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 opacity-10 group-hover:opacity-20 transition text-emerald-400 text-8xl">
+                        <i class="fa-solid fa-bug"></i>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+                        <i class="fa-solid fa-magnifying-glass font-bold"></i>
+                    </div>
+                    <div class="text-xs text-emerald-400 font-bold uppercase tracking-wider mb-1">Level 3</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Detektif Bug (Debugging)</h3>
+                    <p class="text-slate-400 text-xs leading-relaxed mb-4">Temukan instruksi yang salah atau tertukar dalam kode dan perbaiki urutannya!</p>
+                    <div class="flex justify-between items-center">
+                        <span id="lvl3Badge" class="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-400">Belum Selesai</span>
+                        <i class="fa-solid fa-arrow-right text-emerald-400 group-hover:translate-x-1 transition"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LEVEL 1 SCREEN -->
+        <section id="screenLevel1" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                <div>
+                    <span class="text-xs text-cyan-400 font-semibold tracking-wider uppercase">Level 1: Algoritma Sehari-hari</span>
+                    <h2 id="l1Title" class="text-xl font-bold text-white">Membuat Teh Manis Hangat</h2>
+                </div>
+                <button onclick="goToLevelSelect()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg transition">
+                    <i class="fa-solid fa-house mr-1"></i> Menu
+                </button>
+            </div>
+
+            <p class="text-slate-300 text-sm bg-indigo-950/40 border border-indigo-800/40 p-3.5 rounded-xl flex items-center space-x-3">
+                <i class="fa-solid fa-circle-info text-cyan-400 text-lg flex-shrink-0"></i>
+                <span>Klik atau urutkan langkah-langkah di bawah agar menjadi instruksi yang logis dan runtut!</span>
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Instruction Deck (Draggable or Reorderable) -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex justify-between">
+                        <span>Urutan Instruksi Saat Ini</span>
+                        <span class="text-slate-500 text-xs">Gunakan Tombol panah</span>
+                    </h3>
+                    <div id="l1StepsContainer" class="space-y-2.5">
+                        <!-- Step Cards will be generated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Guidance & Execute Area -->
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Logika Komputer</h3>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs font-code text-slate-300 space-y-2 min-h-[140px]" id="l1CodePreview">
+                            <!-- Code simulation preview -->
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <button onclick="checkLevel1()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg glow-cyan transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Uji Algoritma</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LEVEL 2 SCREEN -->
+        <section id="screenLevel2" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                <div>
+                    <span class="text-xs text-indigo-400 font-semibold tracking-wider uppercase">Level 2: Pemrograman Robot</span>
+                    <h2 id="l2MissionTitle" class="text-xl font-bold text-white">Misi 1: Ambil Bintang Rahasia</h2>
+                </div>
+                <button onclick="goToLevelSelect()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg transition">
+                    <i class="fa-solid fa-house mr-1"></i> Menu
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- Grid Map (Robot Canvas) -->
+                <div class="lg:col-span-6 bg-slate-900 p-5 rounded-2xl border border-slate-800 flex flex-col items-center justify-center space-y-4">
+                    <div id="robotGrid" class="grid grid-cols-4 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800 w-full max-w-[320px] aspect-square">
+                        <!-- 4x4 Cells Generated Here -->
+                    </div>
+                    <div class="flex items-center space-x-4 text-xs text-slate-400 font-code">
+                        <span class="flex items-center space-x-1"><span class="w-3 h-3 bg-cyan-500 rounded-full inline-block"></span> <span>Robot</span></span>
+                        <span class="flex items-center space-x-1"><span class="w-3 h-3 bg-amber-400 rounded-full inline-block"></span> <span>Target</span></span>
+                        <span class="flex items-center space-x-1"><span class="w-3 h-3 bg-rose-500 rounded-full inline-block"></span> <span>Rintangan</span></span>
+                    </div>
+                </div>
+
+                <!-- Command Deck & Execution Queue -->
+                <div class="lg:col-span-6 bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+                    <!-- Action Palette -->
+                    <div>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Pilih Blok Perintah</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="addRobotCommand('FORWARD')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-cyan-300 flex items-center justify-center space-x-1.5 transition">
+                                <i class="fa-solid fa-arrow-up"></i>
+                                <span>Maju 1 Langkah</span>
+                            </button>
+                            <button onclick="addRobotCommand('TURN_RIGHT')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-indigo-300 flex items-center justify-center space-x-1.5 transition">
+                                <i class="fa-solid fa-rotate-right"></i>
+                                <span>Belok Kanan</span>
+                            </button>
+                            <button onclick="addRobotCommand('TURN_LEFT')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-indigo-300 flex items-center justify-center space-x-1.5 transition">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                <span>Belok Kiri</span>
+                            </button>
+                            <button onclick="addRobotCommand('PICK_STAR')" class="py-2 px-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-semibold text-amber-300 flex items-center justify-center space-x-1.5 transition">
+                                <i class="fa-solid fa-hand"></i>
+                                <span>Ambil Bintang</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Command Sequence List -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Urutan Program Robot</h3>
+                            <button onclick="clearRobotCommands()" class="text-xs text-rose-400 hover:underline">Hapus Semua</button>
+                        </div>
+                        <div id="robotProgramList" class="bg-slate-950 p-3 rounded-xl border border-slate-800 min-h-[140px] max-h-[180px] overflow-y-auto space-y-1.5">
+                            <span id="emptyProgramText" class="text-xs text-slate-600 block text-center py-8">Belum ada perintah. Klik tombol di atas!</span>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="flex space-x-2 pt-2">
+                        <button id="runRobotBtn" onclick="runRobotProgram()" class="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg glow-purple transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Jalankan Kode</span>
+                        </button>
+                        <button onclick="resetRobotGrid()" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LEVEL 3 SCREEN -->
+        <section id="screenLevel3" class="hidden space-y-6">
+            <div class="flex justify-between items-center bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                <div>
+                    <span class="text-xs text-emerald-400 font-semibold tracking-wider uppercase">Level 3: Detektif Bug</span>
+                    <h2 id="l3Title" class="text-xl font-bold text-white">Misi: Cari & Perbaiki Urutan yang Rusak</h2>
+                </div>
+                <button onclick="goToLevelSelect()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg transition">
+                    <i class="fa-solid fa-house mr-1"></i> Menu
+                </button>
+            </div>
+
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-6">
+                <div class="bg-emerald-950/30 border border-emerald-800/40 p-4 rounded-xl space-y-1">
+                    <div class="text-xs text-emerald-400 font-semibold uppercase tracking-wide">Skenario Bug</div>
+                    <p id="l3ScenarioText" class="text-slate-200 text-sm font-medium">
+                        Budi ingin menyalakan HP untuk belajar online, tetapi urutan instruksi komputernya eror sehingga HP tidak bisa menyala.
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Tukar Dua Langkah Ini Agar Urutannya Benar:</h3>
+                    <div id="l3CardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- Step Cards to be swapped -->
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end">
+                    <button onclick="checkLevel3()" class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold rounded-xl shadow-lg glow-green transition flex items-center space-x-2">
+                        <i class="fa-solid fa-bug-slash"></i>
+                        <span>Perbaiki Bug</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: CERTIFICATE & SUMMARY -->
+        <section id="screenCertificate" class="hidden space-y-8 animate-fade-in py-4">
+            <div id="certificateCard" class="bg-slate-900 border-2 border-amber-500/40 rounded-3xl p-8 max-w-2xl mx-auto space-y-6 shadow-2xl relative overflow-hidden">
+                <div class="absolute -top-12 -right-12 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="text-center space-y-2">
+                    <div class="inline-block p-3 bg-amber-500/10 text-amber-400 rounded-2xl mb-1">
+                        <i class="fa-solid fa-award text-4xl"></i>
+                    </div>
+                    <span class="text-xs uppercase tracking-widest text-amber-400 font-bold block">Sertifikat Kelulusan Algoritma</span>
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-white">Master Urutan Instruksi</h2>
+                    <p class="text-xs text-slate-400">Mata Pelajaran KKA (Keterampilan Koding & Algoritma) Kelas 7 SMP</p>
+                </div>
+
+                <!-- Student Name Input / Output -->
+                <div class="space-y-1 text-center">
+                    <label for="studentNameInput" class="text-xs text-slate-400 uppercase tracking-wider">Nama Siswa / Programmer:</label>
+                    <input type="text" id="studentNameInput" placeholder="Ketik nama lengkapmu di sini..." class="w-full text-center bg-slate-950 border border-slate-700 focus:border-amber-400 rounded-xl px-4 py-2 text-amber-300 font-bold text-lg outline-none transition">
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="grid grid-cols-3 gap-3 bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center">
+                    <div>
+                        <span class="text-slate-500 text-xs block">Total Skor</span>
+                        <span id="certScore" class="text-2xl font-extrabold text-cyan-400">100</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 text-xs block">Bintang</span>
+                        <span id="certStars" class="text-2xl font-extrabold text-amber-400">⭐⭐⭐</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 text-xs block">Predikat</span>
+                        <span class="text-xs font-bold text-emerald-400 block mt-2">ALGORITMIS!</span>
+                    </div>
+                </div>
+
+                <!-- Learning Takeaway -->
+                <div class="bg-indigo-950/40 border border-indigo-800/40 p-4 rounded-2xl text-xs leading-relaxed text-slate-300 space-y-1">
+                    <span class="font-bold text-cyan-300 block"><i class="fa-solid fa-lightbulb mr-1"></i> Rangkuman Pembelajaran:</span>
+                    <p>
+                        Algoritma adalah serangkaian langkah-langkah yang disusun secara **sistematis dan logis**. Komputer memproses perintah tepat satu per satu sesuai urutannya. Urutan yang tertukar dapat menyebabkan kegagalan sistem atau **Bug**!
+                    </p>
+                </div>
+
+                <!-- Footer Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button onclick="window.print()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Cetak / Simpan PDF</span>
+                    </button>
+                    <button onclick="goToLevelSelect()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold rounded-xl text-xs shadow-lg transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Main Lagi</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Feedback Container -->
+    <div id="feedbackModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md w-full space-y-4 text-center relative animate-fade-in shadow-2xl">
+            <div id="modalIcon" class="w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto"></div>
+            <h3 id="modalTitle" class="text-xl font-bold text-white"></h3>
+            <p id="modalMessage" class="text-slate-300 text-xs leading-relaxed"></p>
+            <div id="modalExplanation" class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 text-left"></div>
+            <button id="modalBtn" onclick="closeModal()" class="w-full py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs transition">Lanjutkan</button>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            score: 0,
+            stars: 0,
+            audioEnabled: true,
+            completedLevels: [false, false, false],
+            currentLevel: 1,
+            // Level 1 state
+            l1DataIndex: 0,
+            l1CurrentSteps: [],
+            // Level 2 state
+            l2RobotPos: { x: 0, y: 0 },
+            l2RobotFacing: 1, // 0: North, 1: East, 2: South, 3: West
+            l2GoalPos: { x: 3, y: 3 },
+            l2Obstacles: [{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 1, y: 2 }],
+            l2Commands: [],
+            isRobotRunning: false,
+            // Level 3 state
+            l3SelectedCards: []
+        };
+
+        // Synthesized Audio Player using Tone.js
+        function playSound(type) {
+            if (!state.audioEnabled) return;
+            try {
+                Tone.start();
+                const synth = new Tone.Synth().toDestination();
+                if (type === 'click') {
+                    synth.triggerAttackRelease("C5", "8n");
+                } else if (type === 'success') {
+                    const now = Tone.now();
+                    synth.triggerAttackRelease("C5", "8n", now);
+                    synth.triggerAttackRelease("E5", "8n", now + 0.1);
+                    synth.triggerAttackRelease("G5", "8n", now + 0.2);
+                } else if (type === 'error') {
+                    synth.triggerAttackRelease("A2", "8n");
+                } else if (type === 'step') {
+                    synth.triggerAttackRelease("F4", "16n");
+                }
+            } catch (e) { console.log('Audio disabled/restricted'); }
+        }
+
+        function toggleAudio() {
+            state.audioEnabled = !state.audioEnabled;
+            document.getElementById('soundIcon').className = state.audioEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+        }
+
+        const level1Scenarios = [
+            {
+                title: "Membuat Teh Manis Hangat",
+                correctSteps: [
+                    "Rebus air hingga mendidih",
+                    "Masukkan kantong teh ke dalam cangkir",
+                    "Tuangkan air panas ke cangkir",
+                    "Tambahkan 2 sendok gula manis",
+                    "Aduk teh hingga gula larut"
+                ]
+            },
+            {
+                title: "Prosedur Memakai Sepatu Olahraga",
+                correctSteps: [
+                    "Pakai kaos kaki yang bersih",
+                    "Masukkan kaki ke dalam sepatu",
+                    "Tarik lidah sepatu agar nyaman",
+                    "Ikat tali sepatu dengan kencang"
+                ]
+            }
+        ];
+
+        const level3Data = [
+            {
+                scenario: "Budi ingin menyalakan laptop sekolah, namun instruksi logitnya eror!",
+                steps: [
+                    "Buka layar laptop",
+                    "Buka aplikasi belajar", // WRONG PLACE (Should be last)
+                    "Tancapkan kabel charger jika baterai habis",
+                    "Tekan tombol Power" // WRONG PLACE
+                ],
+                correctOrder: [0, 2, 3, 1],
+                explanation: "Kamu tidak bisa membuka aplikasi belajar SEBELUM menekan tombol Power dan menyalakan laptop!"
+            }
+        ];
+
+        function hideAllScreens() {
+            document.getElementById('screenMenu').classList.add('hidden');
+            document.getElementById('screenLevel1').classList.add('hidden');
+            document.getElementById('screenLevel2').classList.add('hidden');
+            document.getElementById('screenLevel3').classList.add('hidden');
+            document.getElementById('screenCertificate').classList.add('hidden');
+        }
+
+        function goToLevelSelect() {
+            playSound('click');
+            hideAllScreens();
+            document.getElementById('screenMenu').classList.remove('hidden');
+            updateBadges();
+        }
+
+        function updateBadges() {
+            const badges = ['lvl1Badge', 'lvl2Badge', 'lvl3Badge'];
+            state.completedLevels.forEach((completed, idx) => {
+                const badge = document.getElementById(badges[idx]);
+                if (completed) {
+                    badge.innerText = "Selesai ✓";
+                    badge.className = "text-xs px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-bold";
+                }
+            });
+            document.getElementById('starCount').innerText = state.stars;
+            document.getElementById('scoreCount').innerText = state.score;
+        }
+
+        function startLevel(lvl) {
+            playSound('click');
+            hideAllScreens();
+            state.currentLevel = lvl;
+
+            if (lvl === 1) {
+                initLevel1();
+                document.getElementById('screenLevel1').classList.remove('hidden');
+            } else if (lvl === 2) {
+                initLevel2();
+                document.getElementById('screenLevel2').classList.remove('hidden');
+            } else if (lvl === 3) {
+                initLevel3();
+                document.getElementById('screenLevel3').classList.remove('hidden');
+            }
+        }
+
+        function initLevel1() {
+            const scenario = level1Scenarios[state.l1DataIndex];
+            document.getElementById('l1Title').innerText = scenario.title;
+            // Shuffle steps
+            state.l1CurrentSteps = [...scenario.correctSteps].sort(() => Math.random() - 0.5);
+            renderLevel1Steps();
+        }
+
+        function renderLevel1Steps() {
+            const container = document.getElementById('l1StepsContainer');
+            container.innerHTML = '';
+            
+            state.l1CurrentSteps.forEach((step, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center justify-between space-x-3 hover:border-slate-700 transition";
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="w-6 h-6 rounded-lg bg-slate-800 text-cyan-400 text-xs font-bold flex items-center justify-center font-code">${idx + 1}</span>
+                        <span class="text-xs text-slate-200 font-medium">${step}</span>
+                    </div>
+                    <div class="flex space-x-1">
+                        <button onclick="moveL1Step(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30"' : 'class="hover:text-cyan-400"'} class="p-1 text-slate-500"><i class="fa-solid fa-chevron-up text-xs"></i></button>
+                        <button onclick="moveL1Step(${idx}, 1)" ${idx === state.l1CurrentSteps.length - 1 ? 'disabled class="opacity-30"' : 'class="hover:text-cyan-400"'} class="p-1 text-slate-500"><i class="fa-solid fa-chevron-down text-xs"></i></button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Render Preview
+            const preview = document.getElementById('l1CodePreview');
+            preview.innerHTML = `<span class="text-slate-500">// Jalur eksekusi baris per baris:</span><br>` +
+                state.l1CurrentSteps.map((s, i) => `<span class="text-cyan-400">${i + 1}.</span> ${s}`).join('<br>');
+        }
+
+        function moveL1Step(index, direction) {
+            playSound('click');
+            const targetIdx = index + direction;
+            if (targetIdx < 0 || targetIdx >= state.l1CurrentSteps.length) return;
+            
+            const temp = state.l1CurrentSteps[index];
+            state.l1CurrentSteps[index] = state.l1CurrentSteps[targetIdx];
+            state.l1CurrentSteps[targetIdx] = temp;
+            
+            renderLevel1Steps();
+        }
+
+        function checkLevel1() {
+            const currentScenario = level1Scenarios[state.l1DataIndex];
+            const isCorrect = JSON.stringify(state.l1CurrentSteps) === JSON.stringify(currentScenario.correctSteps);
+
+            if (isCorrect) {
+                playSound('success');
+                state.score += 30;
+                state.stars += 1;
+                state.completedLevels[0] = true;
+                
+                showModal({
+                    title: "Algoritma Tepat! 🎉",
+                    message: "Hebat! Semua langkah telah tersusun dengan logis dan urut.",
+                    explanation: "Mengapa urutan penting? Jika kamu mengaduk teh sebelum menambahkan air, gula tidak akan larut dengan sempurna!",
+                    btnText: "Lanjut ke Level 2",
+                    action: () => startLevel(2)
+                });
+            } else {
+                playSound('error');
+                showModal({
+                    title: "Urutan Belum Tepat 😅",
+                    message: "Ada langkah yang posisinya tertukar. Coba periksa kembali mana yang harus dilakukan lebih dulu!",
+                    explanation: "Petunjuk: Pikirkan logika di dunia nyata. Air harus dipanaskan terlebih dahulu!",
+                    btnText: "Coba Lagi",
+                    action: () => {}
+                });
+            }
+        }
+
+        function initLevel2() {
+            state.l2RobotPos = { x: 0, y: 0 };
+            state.l2RobotFacing = 1; // East
+            state.l2Commands = [];
+            renderRobotGrid();
+            renderRobotProgramList();
+        }
+
+        function renderRobotGrid() {
+            const grid = document.getElementById('robotGrid');
+            grid.innerHTML = '';
+
+            for (let y = 0; y < 4; y++) {
+                for (let x = 0; x < 4; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = "grid-cell bg-slate-900 border border-slate-800 rounded-lg flex items-center justify-center relative";
+
+                    // Check if Robot
+                    if (state.l2RobotPos.x === x && state.l2RobotPos.y === y) {
+                        const angles = [0, 90, 180, 270]; // N, E, S, W
+                        cell.innerHTML = `<div class="robot-head text-cyan-400 text-2xl" style="transform: rotate(${angles[state.l2RobotFacing]}deg)"><i class="fa-solid fa-robot"></i></div>`;
+                    }
+                    // Check Goal
+                    else if (state.l2GoalPos.x === x && state.l2GoalPos.y === y) {
+                        cell.innerHTML = `<i class="fa-solid fa-star text-amber-400 text-xl animate-bounce"></i>`;
+                    }
+                    // Check Obstacle
+                    else if (state.l2Obstacles.some(o => o.x === x && o.y === y)) {
+                        cell.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500 text-lg"></i>`;
+                        cell.classList.add('bg-rose-950/20');
+                    }
+
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function addRobotCommand(cmd) {
+            if (state.isRobotRunning) return;
+            playSound('click');
+            if (state.l2Commands.length >= 8) {
+                showModal({
+                    title: "Memori Penuh!",
+                    message: "Maksimal 8 instruksi per sekali jalan.",
+                    explanation: "",
+                    btnText: "Mengerti"
+                });
+                return;
+            }
+            state.l2Commands.push(cmd);
+            renderRobotProgramList();
+        }
+
+        function clearRobotCommands() {
+            if (state.isRobotRunning) return;
+            playSound('click');
+            state.l2Commands = [];
+            renderRobotProgramList();
+        }
+
+        function renderRobotProgramList() {
+            const list = document.getElementById('robotProgramList');
+            const emptyText = document.getElementById('emptyProgramText');
+
+            if (state.l2Commands.length === 0) {
+                list.innerHTML = `<span id="emptyProgramText" class="text-xs text-slate-600 block text-center py-8">Belum ada perintah. Klik tombol di atas!</span>`;
+                return;
+            }
+
+            list.innerHTML = '';
+            const labels = {
+                'FORWARD': { name: 'Maju 1 Langkah', icon: 'fa-arrow-up', color: 'text-cyan-400' },
+                'TURN_RIGHT': { name: 'Belok Kanan', icon: 'fa-rotate-right', color: 'text-indigo-400' },
+                'TURN_LEFT': { name: 'Belok Kiri', icon: 'fa-rotate-left', color: 'text-indigo-400' },
+                'PICK_STAR': { name: 'Ambil Bintang', icon: 'fa-hand', color: 'text-amber-400' }
+            };
+
+            state.l2Commands.forEach((cmd, idx) => {
+                const item = document.createElement('div');
+                item.id = `cmdItem-${idx}`;
+                item.className = "bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg flex items-center justify-between text-xs";
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="text-slate-500 font-code">${idx + 1}.</span>
+                        <i class="fa-solid ${labels[cmd].icon} ${labels[cmd].color}"></i>
+                        <span class="text-slate-200 font-medium">${labels[cmd].name}</span>
+                    </div>
+                    <button onclick="removeCommand(${idx})" class="text-slate-600 hover:text-rose-400"><i class="fa-solid fa-xmark"></i></button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function removeCommand(idx) {
+            if (state.isRobotRunning) return;
+            playSound('click');
+            state.l2Commands.splice(idx, 1);
+            renderRobotProgramList();
+        }
+
+        function resetRobotGrid() {
+            state.l2RobotPos = { x: 0, y: 0 };
+            state.l2RobotFacing = 1;
+            state.isRobotRunning = false;
+            renderRobotGrid();
+        }
+
+        async function runRobotProgram() {
+            if (state.isRobotRunning || state.l2Commands.length === 0) return;
+            state.isRobotRunning = true;
+            resetRobotGrid();
+
+            let hasPickedStar = false;
+
+            for (let i = 0; i < state.l2Commands.length; i++) {
+                const cmd = state.l2Commands[i];
+                
+                // Highlight active block
+                const activeEl = document.getElementById(`cmdItem-${i}`);
+                if (activeEl) activeEl.classList.add('border-cyan-400', 'bg-slate-800');
+
+                playSound('step');
+                await new Promise(r => setTimeout(r, 600));
+
+                if (cmd === 'FORWARD') {
+                    let nextX = state.l2RobotPos.x;
+                    let nextY = state.l2RobotPos.y;
+
+                    if (state.l2RobotFacing === 0) nextY--; // North
+                    else if (state.l2RobotFacing === 1) nextX++; // East
+                    else if (state.l2RobotFacing === 2) nextY++; // South
+                    else if (state.l2RobotFacing === 3) nextX--; // West
+
+                    // Check boundaries
+                    if (nextX < 0 || nextX > 3 || nextY < 0 || nextY > 3) {
+                        playSound('error');
+                        showModal({
+                            title: "Robot Menabrak Dinding! 💥",
+                            message: "Perintah maju keluar dari peta grid.",
+                            explanation: "Komputer mengeksekusi instruksi membuta. Pastikan posisinya aman!",
+                            btnText: "Perbaiki Kode",
+                            action: () => resetRobotGrid()
+                        });
+                        state.isRobotRunning = false;
+                        return;
+                    }
+
+                    // Check Obstacle
+                    if (state.l2Obstacles.some(o => o.x === nextX && o.y === nextY)) {
+                        playSound('error');
+                        showModal({
+                            title: "Robot Menabrak Rintangan! ⚠️",
+                            message: "Ada bahaya di sel tersebut!",
+                            explanation: "Ubah urutan belokanmu agar memutari rintangan.",
+                            btnText: "Coba Lagi",
+                            action: () => resetRobotGrid()
+                        });
+                        state.isRobotRunning = false;
+                        return;
+                    }
+
+                    state.l2RobotPos = { x: nextX, y: nextY };
+                } else if (cmd === 'TURN_RIGHT') {
+                    state.l2RobotFacing = (state.l2RobotFacing + 1) % 4;
+                } else if (cmd === 'TURN_LEFT') {
+                    state.l2RobotFacing = (state.l2RobotFacing + 3) % 4;
+                } else if (cmd === 'PICK_STAR') {
+                    if (state.l2RobotPos.x === state.l2GoalPos.x && state.l2RobotPos.y === state.l2GoalPos.y) {
+                        hasPickedStar = true;
+                    }
+                }
+
+                renderRobotGrid();
+                if (activeEl) activeEl.classList.remove('border-cyan-400', 'bg-slate-800');
+            }
+
+            // Check final result
+            if (hasPickedStar) {
+                playSound('success');
+                state.score += 40;
+                state.stars += 1;
+                state.completedLevels[1] = true;
+                confetti({ particleCount: 80, spread: 60 });
+
+                showModal({
+                    title: "Misi Pemrograman Berhasil! 🤖✨",
+                    message: "AlgoBot berhasil mencapai target dan mengambil bintang!",
+                    explanation: "Setiap langkah 'Maju' dan 'Belok' tereksekusi dengan urutan yang sempurna.",
+                    btnText: "Lanjut ke Level 3",
+                    action: () => startLevel(3)
+                });
+            } else {
+                playSound('error');
+                showModal({
+                    title: "Misi Belum Selesai",
+                    message: "Robot belum mengambil bintang target, atau lupa memberi perintah 'Ambil Bintang' di posisi akhir!",
+                    explanation: "Ingat: Komputer tidak mengambil bintang secara otomatis jika tidak kamu perintahkan!",
+                    btnText: "Perbaiki Instruksi",
+                    action: () => resetRobotGrid()
+                });
+            }
+
+            state.isRobotRunning = false;
+        }
+
+        function initLevel3() {
+            const data = level3Data[0];
+            document.getElementById('l3ScenarioText').innerText = data.scenario;
+            state.l3SelectedCards = [];
+            renderLevel3Cards();
+        }
+
+        function renderLevel3Cards() {
+            const container = document.getElementById('l3CardsContainer');
+            container.innerHTML = '';
+            const data = level3Data[0];
+
+            data.steps.forEach((stepText, idx) => {
+                const isSelected = state.l3SelectedCards.includes(idx);
+                const card = document.createElement('div');
+                card.onclick = () => toggleL3CardSelect(idx);
+                card.className = `p-4 rounded-xl border cursor-pointer transition flex items-center justify-between ${
+                    isSelected ? 'bg-indigo-900/40 border-indigo-500 glow-purple' : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                }`;
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="w-7 h-7 rounded-lg ${isSelected ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-400'} text-xs font-bold flex items-center justify-center font-code">${idx + 1}</span>
+                        <span class="text-xs text-slate-200 font-semibold">${stepText}</span>
+                    </div>
+                    ${isSelected ? '<i class="fa-solid fa-arrows-rotate text-indigo-400"></i>' : ''}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleL3CardSelect(idx) {
+            playSound('click');
+            if (state.l3SelectedCards.includes(idx)) {
+                state.l3SelectedCards = state.l3SelectedCards.filter(i => i !== idx);
+            } else {
+                if (state.l3SelectedCards.length >= 2) {
+                    state.l3SelectedCards.shift();
+                }
+                state.l3SelectedCards.push(idx);
+            }
+
+            if (state.l3SelectedCards.length === 2) {
+                // Swap steps
+                const [i1, i2] = state.l3SelectedCards;
+                const temp = level3Data[0].steps[i1];
+                level3Data[0].steps[i1] = level3Data[0].steps[i2];
+                level3Data[0].steps[i2] = temp;
+                state.l3SelectedCards = [];
+            }
+
+            renderLevel3Cards();
+        }
+
+        function checkLevel3() {
+            const data = level3Data[0];
+            // Check if steps match correct order logic
+            const isCorrect = data.steps[1] === "Tancapkan kabel charger jika baterai habis" && 
+                              data.steps[2] === "Tekan tombol Power" &&
+                              data.steps[3] === "Buka aplikasi belajar";
+
+            if (isCorrect) {
+                playSound('success');
+                state.score += 30;
+                state.stars += 1;
+                state.completedLevels[2] = true;
+                confetti({ particleCount: 100, spread: 70 });
+
+                showModal({
+                    title: "Bug Berhasil Diperbaiki! 🐛🔍",
+                    message: "Selamat! Kamu berhasil menelusuri dan membetulkan urutan logika yang tertukar.",
+                    explanation: data.explanation,
+                    btnText: "Lihat Sertifikat",
+                    action: () => showCertificate()
+                });
+            } else {
+                playSound('error');
+                showModal({
+                    title: "Masih Ada Bug!",
+                    message: "Urutan instruksi masih belum logis. Pilih 2 kartu untuk menukar posisinya.",
+                    explanation: "Petunjuk: Buka aplikasi belajar harus menjadi langkah PALING AKHIR setelah laptop menyala!",
+                    btnText: "Coba Lagi"
+                });
+            }
+        }
+
+        function showModal({ title, message, explanation, btnText, action }) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            document.getElementById('modalExplanation').innerText = explanation || "";
+            document.getElementById('modalBtn').innerText = btnText || "OK";
+            
+            window.modalAction = action;
+            document.getElementById('feedbackModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            playSound('click');
+            document.getElementById('feedbackModal').classList.add('hidden');
+            if (window.modalAction) window.modalAction();
+        }
+
+        function showCertificate() {
+            hideAllScreens();
+            document.getElementById('certScore').innerText = state.score;
+            document.getElementById('certStars').innerText = "⭐".repeat(state.stars);
+            document.getElementById('screenCertificate').classList.remove('hidden');
+            confetti({ particleCount: 150, spread: 100 });
+        }
+
+        // Initialize default view
+        window.onload = function() {
+            goToLevelSelect();
+        };
+    </script>
+</body>
+</html>
